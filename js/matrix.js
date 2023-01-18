@@ -1,12 +1,24 @@
 "use strict"
 
-export {generateMatrix};
+export {Matrix};
 
-function generateMatrix(width, height) {
-    const matrix = [];
-    for (let i = 0; i < height; i++) {
-        matrix[i] = new Array(width);
+class Matrix {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.array2d = (() => {
+            const matrix = [];
+            for (let i = 0; i < this.height; i++) {
+                matrix[i] = new Array(this.width);
+            }
+            return matrix
+        })();
     }
-
-    return matrix
+    fill(element) {
+        for (const cellRow of this.array2d) {
+            for (let i = 0; i < cellRow.length; i++) {
+                cellRow[i] = element;
+            }
+        }
+    }
 }
