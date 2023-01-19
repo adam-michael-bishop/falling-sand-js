@@ -18,7 +18,7 @@ function tick() {
     if (tickCount % 2 === 0 && tickCount < 500) {
         matrix.array2d[0][50] = new Element.Sand();
     }
-    matrix.updateSteps(matrix.generateNextStepMatrix());
+    matrix.updateElementPositions(matrix.moveAllElements());
     context.clearRect(0, 0, canvasWidth, canvasHeight);
     drawMatrixToContext();
     tickCount++
@@ -49,6 +49,7 @@ $('canvas').css("border", "black solid 1px")
 
 // console.log(matrix.array2d[0][10].step(10,0,matrix.array2d));
 setInterval(tick, updateRateMS);
+console.log(matrix.array2d[0][50]);
 
 // matrix.debugFillFirstRow(new Element.Sand());
 // console.log(matrix.generateNextStepMatrix());
