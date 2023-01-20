@@ -13,6 +13,19 @@ class Element {
     constructor(x, y) {
         this.x = x;
         this.y = y;
+        this.velocity = 0;
+        this.isMoving = false;
+        this.isFalling = false;
+    }
+    setCoordsToNewMovePosition({array2d}, direction) {
+        //direction should be an array that describes the x and y vector of the element's direction
+        //[1, 0] would be to the right. [1, 1] would be down and to the right diagonal
+        for (let i = 0; i < this.velocity; i++) {
+            if (array2d[this.y + direction[1]][this.x + direction[0]].state !== "solid") {
+                this.x += direction[0];
+                this.y += direction[1];
+            }
+        }
     }
 }
 
@@ -24,13 +37,28 @@ class Void extends Element {
     }
 }
 
-class Sand extends Element {
+class Solid extends Element {
+
+}
+
+class Liquid extends Element {
+
+}
+
+class Gas extends Element {
+
+}
+
+class SolidMovable extends Solid {
+
+}
+
+class Sand extends SolidMovable {
     constructor(x, y) {
         super(x, y);
         this.name = "sand";
         this.color = sandColor;
         this.state = "solid";
-        this.isMoving = false;
     }
     move(matrix) {
         // const coordsCurrent = {y: yIndex, x: xIndex};
@@ -73,14 +101,14 @@ class Sand extends Element {
 
         }
     }
-    shouldMove(matrix) {
-        const cellBelow = matrix.array2d[this.y + 1][this.x];
-        const cellBottomRight = matrix.array2d[this.y + 1][this.x + 1];
-        const cellBottomLeft = matrix.array2d[this.y + 1][this.x - 1];
+    shouldMove({array2d, width, height}) {
+        const cellBelow = array2d[this.y + 1][this.x];
+        const cellBottomRight = array2d[this.y + 1][this.x + 1];
+        const cellBottomLeft = array2d[this.y + 1][this.x - 1];
 
-        if ((this.y >= matrix.height) ||
+        if ((this.y >= height) ||
             (cellBelow.state === "solid" && cellBottomRight.state === "solid" && cellBottomLeft.state === "solid") ||
-            (this.x === matrix.width && cellBottomLeft.state === "solid" && cellBelow.state === "solid") ||
+            (this.x === width && cellBottomLeft.state === "solid" && cellBelow.state === "solid") ||
             (this.x === 0 && cellBottomRight.state === "solid" && cellBelow.state === "solid")) {
             this.isMoving = false;
             return false
