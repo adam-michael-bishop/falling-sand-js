@@ -28,14 +28,13 @@ class Matrix {
             arr2d.push([]);
             for (let j = 0; j < this.array2d[i].length; j++) {
                 let element = this.getElementFromCoords(j, i);
-                if (element instanceof Element.Void) {
-                    arr2d[i].push("");
+                if (element instanceof Element.Void || element instanceof Element.SolidImmovable) {
+                    arr2d[i].push('');
                 } else {
                     arr2d[i].push(element.getCoordsToNewMovePosition(this, element.shouldMove(this)));
                 }
             }
         }
-        // console.log(arr2d);
         return arr2d
     }
     updateElementPositions(arr2d) {
@@ -43,9 +42,8 @@ class Matrix {
             for (let j = 0; j < this.array2d[i].length; j++) {
                 let element = this.getElementFromCoords(j, i);
                 let newCords = arr2d[i][j];
-                // console.log(newCords);
                 if (!(element instanceof Element.Void)) {
-                    if ((i !== newCords[1] || j !== newCords[0]) && newCords !== "") {
+                    if ((i !== newCords[1] || j !== newCords[0]) && newCords !== '') {
                         let vector = element.shouldMove(this);
                         this.swapElementPositions(element, newCords, vector);
                     }
@@ -54,21 +52,7 @@ class Matrix {
         }
     }
     swapElementPositions(element, newCoords, vector) {
-        // console.log(element);
-        // console.log(newCoords);
-        // console.log(vector);
-        // while (element.x !== newCoords[0] || element.y !== newCoords[1]) {
-        //     let nextElement = this.getElementFromCoords(element.x, element.y, vector)
-        //     if (nextElement instanceof Element.Solid) {
-        //         console.log('break');
-        //         break
-        //     }
-        //     this.array2d[element.y][element.x] = nextElement;
-        //     console.log(element);
-        //     element.x += vector[0];
-        //     element.y += vector[1];
-        //     this.array2d[element.y][element.x] = element;
-        // }
+        if (!vector) {return;}
         for (let i = 0; i < element.velocity; i++) {
             let nextElement = this.getElementFromCoords(element.x, element.y, vector);
             if (nextElement instanceof Element.Solid || nextElement === undefined) {
@@ -82,13 +66,14 @@ class Matrix {
         }
     }
     getElementFromCoords(x, y, vector = [0, 0]) {
-        // console.log(JSON.stringify(this.array2d[y][x]));
+        // if (vector[0] !== 0 && vector[1] !== 0) {
+        //     console.log(x, y, vector);
+        // }
         let xCoords = x + vector[0];
         let yCoords = y + vector[1];
         if (xCoords >= this.width || xCoords < 0 || yCoords >= this.height || yCoords < 0) {
             return undefined
         }
-        // console.log(xCoords, yCoords);
         return this.array2d[yCoords][xCoords];
     }
     setElementAtCoordsByVector(element, vector) {
