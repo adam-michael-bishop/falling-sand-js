@@ -1,9 +1,10 @@
 "use strict";
 
-export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable};
+export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone};
 
 const sandColor = "#e1c9a1";
 const waterColor = "#497dff";
+const stoneColor = "#505050";
 
 /*TODO:
  *All Elements should have an x and y value that updates anytime they move cells in the matrix
@@ -54,7 +55,35 @@ class Solid extends Element {
 }
 
 class Liquid extends Element {
+    shouldMove(matrix) {
+        const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.vector2d.down);
+        const cellRight = matrix.getElementFromCoords(this.x, this.y, this.vector2d.right);
+        const cellLeft = matrix.getElementFromCoords(this.x, this.y, this.vector2d.left);
 
+        if (!(cellBelow instanceof Solid) && !(cellBelow instanceof Liquid) && cellBelow !== undefined) {
+            this.isMoving = true;
+            return this.vector2d.down;
+        }
+        if ((cellLeft instanceof Void || cellLeft instanceof Gas) && (cellRight instanceof Void || cellRight instanceof Gas)) {
+            if (Math.random() >= .5) {
+                this.isMoving = true;
+                return this.vector2d.left;
+            } else {
+                this.isMoving = true;
+                return this.vector2d.right;
+            }
+        }
+        if (cellLeft instanceof Void || cellLeft instanceof Gas) {
+            this.isMoving = true;
+            return this.vector2d.left;
+        }
+        if (cellRight instanceof Void || cellRight instanceof Gas) {
+            this.isMoving = true;
+            return this.vector2d.right;
+        }
+        this.isMoving = false;
+        return false;
+    }
 }
 
 class Gas extends Element {
@@ -62,16 +91,6 @@ class Gas extends Element {
 }
 
 class SolidMovable extends Solid {
-
-}
-
-class Sand extends SolidMovable {
-    constructor(x, y) {
-        super(x, y);
-        this.name = "sand";
-        this.color = sandColor;
-        this.state = "solid";
-    }
     shouldMove(matrix) {
         const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.vector2d.down);
         const cellBottomRight = matrix.getElementFromCoords(this.x, this.y, this.vector2d.downRight);
@@ -105,6 +124,28 @@ class Sand extends SolidMovable {
 
         this.isMoving = false;
         return false;
+    }
+}
+
+class SolidImmovable extends Solid {
+    constructor(x, y) {
+        super(x, y);
+        this.name = "stone";
+        this.color = stoneColor;
+        this.state = "solid";
+    }
+}
+
+class Stone extends SolidImmovable {
+
+}
+
+class Sand extends SolidMovable {
+    constructor(x, y) {
+        super(x, y);
+        this.name = "sand";
+        this.color = sandColor;
+        this.state = "solid";
     }
 }
 
