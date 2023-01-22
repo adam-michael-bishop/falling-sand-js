@@ -16,9 +16,9 @@ let tickCount = 0;
 
 function tick() {
     if (tickCount % 2 === 0 && tickCount < 500) {
-        matrix.array2d[0][50] = new Element.Sand();
+        matrix.array2d[0][5] = new Element.Sand(5, 0);
     }
-    matrix.updateElementPositions(matrix.moveAllElements());
+    matrix.updateElementPositions(matrix.setNewCoordsForAllElements());
     context.clearRect(0, 0, canvasWidth, canvasHeight);
     drawMatrixToContext();
     tickCount++
@@ -45,11 +45,21 @@ $('canvas').css("border", "black solid 1px")
 
 // matrix.updateSteps(matrix.generateNextStepMatrix());
 // drawMatrixToContext();
+// matrix.array2d[0][10] = new Element.Sand(10, 0);
 
-
+// matrix.updateElementPositions(matrix.setNewCoordsForAllElements());
+// drawMatrixToContext();
+// matrix.updateElementPositions(matrix.setNewCoordsForAllElements());
+// drawMatrixToContext()
+// matrix.updateElementPositions(matrix.setNewCoordsForAllElements());
+// drawMatrixToContext()
+// matrix.updateElementPositions(matrix.setNewCoordsForAllElements());
+// drawMatrixToContext()
 // console.log(matrix.array2d[0][10].step(10,0,matrix.array2d));
 setInterval(tick, updateRateMS);
-console.log(matrix.array2d[0][50]);
+// console.log(matrix);
+// let test = matrix.getElementFromCoords(10, 0);
+// console.log(test.getCoordsToNewMovePosition(matrix, test.shouldMove(matrix)));
 
 // matrix.debugFillFirstRow(new Element.Sand());
 // console.log(matrix.generateNextStepMatrix());
