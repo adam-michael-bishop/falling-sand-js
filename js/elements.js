@@ -1,6 +1,6 @@
 "use strict";
 
-export {Element, Sand, Water, Void};
+export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable};
 
 const sandColor = "#e1c9a1";
 const waterColor = "#497dff";
@@ -13,19 +13,31 @@ class Element {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.velocity = 0;
+        this.velocity = 5;
         this.isMoving = false;
-        this.isFalling = false;
+        this.vector2d = {
+            up: [0, -1],
+            down: [0, 1],
+            left: [-1, 0],
+            right: [1, 0],
+            upLeft: [-1, -1],
+            upRight: [1, -1],
+            downLeft: [-1, 1],
+            downRight: [1, 1]
+        }
     }
-    setCoordsToNewMovePosition({array2d}, direction) {
+    getCoordsToNewMovePosition({array2d}, direction) {
         //direction should be an array that describes the x and y vector of the element's direction
         //[1, 0] would be to the right. [1, 1] would be down and to the right diagonal
+        let newPos = [this.x, this.y];
+        if (direction === false) {return newPos}
         for (let i = 0; i < this.velocity; i++) {
-            if (array2d[this.y + direction[1]][this.x + direction[0]].state !== "solid") {
-                this.x += direction[0];
-                this.y += direction[1];
+            if (!(array2d[this.y + direction[1]][this.x + direction[0]] instanceof Solid)) {
+                newPos[0] += direction[0];
+                newPos[1] += direction[1];
             }
         }
+        return newPos;
     }
 }
 
@@ -60,65 +72,43 @@ class Sand extends SolidMovable {
         this.color = sandColor;
         this.state = "solid";
     }
-    move(matrix) {
-        // const coordsCurrent = {y: yIndex, x: xIndex};
-        // const coordsCellBelow = {y: yIndex + 1, x: xIndex};
-        // const coordsCellBottomLeft = {y: yIndex + 1, x: xIndex - 1};
-        // const coordsCellBottomRight = {y: yIndex + 1, x: xIndex + 1};
-        // let cellBelow;
-        // let cellBottomLeft;
-        // let cellBottomRight;
-        //
-        // if (yIndex !== arr2d.length - 1) {
-        //     cellBelow = arr2d[yIndex + 1][xIndex];
-        // }
-        // if (xIndex !== 0 && yIndex !== arr2d.length - 1) {
-        //     cellBottomLeft = arr2d[yIndex + 1][xIndex - 1];
-        // }
-        // if (xIndex !== arr2d[yIndex].length - 1 && yIndex !== arr2d.length - 1) {
-        //     cellBottomRight = arr2d[yIndex + 1][xIndex + 1];
-        // }
-        //
-        // if (cellBelow === undefined){
-        //     return coordsCurrent;
-        // } else if (cellBelow.state === 'solid') {
-        //     if (cellBottomRight === undefined) {
-        //         return coordsCellBottomLeft;
-        //     } else if (cellBottomLeft === undefined) {
-        //         return coordsCellBottomRight;
-        //     } else if (Math.random() < .5){
-        //         return coordsCellBottomLeft;
-        //     } else {
-        //         return coordsCellBottomRight;
-        //     }
-        // } else {
-        //     return coordsCellBelow;
-        // }
-        if (!this.shouldMove(matrix)) {
-            return //don't move
-        }
-        if (matrix.array2d[this.y + 1][this.x].state !== "solid") {
+    shouldMove(matrix) {
+        const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.vector2d.down);
+        const cellBottomRight = matrix.getElementFromCoords(this.x, this.y, this.vector2d.downRight);
+        const cellBottomLeft = matrix.getElementFromCoords(this.x, this.y, this.vector2d.downLeft);
 
-        }
-    }
-    shouldMove({array2d, width, height}) {
-        const cellBelow = array2d[this.y + 1][this.x];
-        const cellBottomRight = array2d[this.y + 1][this.x + 1];
-        const cellBottomLeft = array2d[this.y + 1][this.x - 1];
-
-        if ((this.y >= height) ||
-            (cellBelow.state === "solid" && cellBottomRight.state === "solid" && cellBottomLeft.state === "solid") ||
-            (this.x === width && cellBottomLeft.state === "solid" && cellBelow.state === "solid") ||
-            (this.x === 0 && cellBottomRight.state === "solid" && cellBelow.state === "solid")) {
+        if (this.y >= matrix.height - 1) {
             this.isMoving = false;
-            return false
+            return false;
         }
-        this.isMoving = true;
-        return true
+        if (!(cellBelow instanceof Solid) && cellBelow !== undefined) {
+            this.isMoving = true;
+            return this.vector2d.down;
+        }
+        if (!(cellBottomLeft instanceof Solid || cellBottomLeft === undefined) && !(cellBottomRight instanceof Solid || cellBottomRight === undefined)) {
+            if (Math.random() >= .5) {
+                this.isMoving = true;
+                return this.vector2d.downLeft;
+            } else {
+                this.isMoving = true;
+                return this.vector2d.downRight;
+            }
+        }
+        if (!(cellBottomLeft instanceof Solid || cellBottomLeft === undefined)) {
+            this.isMoving = true;
+            return this.vector2d.downLeft;
+        }
+        if (!(cellBottomRight instanceof Solid || cellBottomRight === undefined)) {
+            this.isMoving = true;
+            return this.vector2d.downRight;
+        }
+
+        this.isMoving = false;
+        return false;
     }
 }
 
-class Water extends Element{
+class Water extends Liquid{
     constructor(x, y) {
         super(x, y);
         this.name = "water";
