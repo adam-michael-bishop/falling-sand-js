@@ -38,6 +38,7 @@ function drawMatrixToContext() {
         }
     }
 }
+
 function getMousePos(canvas, evt) {
     const rect = canvas.getBoundingClientRect();
     return {
@@ -46,11 +47,11 @@ function getMousePos(canvas, evt) {
     };
 }
 
-function getCellFromMousePos(mousePos) {
+function setCellFromMousePos(mousePos, element) {
     let xPos = Math.floor((mousePos.x / pixelToMatrixRatio));
     let yPos = Math.floor((mousePos.y / pixelToMatrixRatio));
     // console.log(xPos, yPos, mousePos);
-    matrix.setElementAtCoordsByVector(new Element.Stone(xPos, yPos), [0, 0]);
+    matrix.setElementAtCoordsByVector(new element(xPos, yPos), [0, 0]);
 }
 
 $('body').prepend(canvas).css("background-color", "black");
@@ -61,7 +62,33 @@ $('canvas').css("border", "white solid 1px")
         id: canvasId,
     })
     .after("<button id='pause-sim'>pause</button>" +
-        "<button id='toggle-faucet'>faucet</button>");
+        "<button id='toggle-faucet'>faucet</button>")
+    .mousedown(function (e){
+    if (e.button === 0){
+        mouseHeld = setInterval(function () {
+            setCellFromMousePos(mousePosition, Element.Water);
+        }, 10);
+    }
+    if (e.button === 2){
+        mouseHeld = setInterval(function () {
+            setCellFromMousePos(mousePosition, Element.Void);
+        }, 10);
+    }
+})
+    .mouseup(function (e){
+        if (e.button === 0 || e.button === 2) {
+            clearInterval(mouseHeld);
+        }
+    })
+    .mousemove(function (e){
+        mousePosition = getMousePos(canvas, e);
+    })
+    .mouseout(function (){
+        clearInterval(mouseHeld);
+    })
+    .contextmenu(function (e){
+        e.preventDefault();
+    });
 $('#pause-sim').click(function (){
     if (!togglePause) {
         clearInterval(gameTick);
@@ -75,21 +102,6 @@ $('#pause-sim').click(function (){
 $('#toggle-faucet').click(function () {
     toggleFaucet = !toggleFaucet;
 })
-
-$('canvas').mousedown(function (){
-    mouseHeld = setInterval(function () {
-        getCellFromMousePos(mousePosition);
-    }, 10);
-})
-    .mouseup(function (){
-        clearInterval(mouseHeld);
-    })
-    .mousemove(function (event){
-    mousePosition = getMousePos(canvas, event);
-})
-    .mouseout(function (){
-        clearInterval(mouseHeld);
-    });
 
 let gameTick = setInterval(tick, updateRateMS);
 
