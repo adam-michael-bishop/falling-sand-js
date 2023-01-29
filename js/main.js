@@ -17,7 +17,8 @@ let togglePause = false;
 let toggleFaucet = false;
 let mouseHeld = undefined;
 let mousePosition = null;
-let paintElement = null;
+let paintElement = Elements.Sand;
+let brushSize = 2;
 
 
 function tick() {
@@ -49,19 +50,36 @@ function getMousePos(canvas, evt) {
     };
 }
 
-function setCellFromMousePos(mousePos, element) {
-    let xPos = Math.floor((mousePos.x / pixelToMatrixRatio));
-    let yPos = Math.floor((mousePos.y / pixelToMatrixRatio));
-    // console.log(xPos, yPos, mousePos);
-    matrix.setElementAtCoordsByVector(new element(xPos, yPos), [0, 0]);
+function paintCellsToSelectedElement(mousePos, element) {
+    const xPos = Math.floor((mousePos.x / pixelToMatrixRatio));
+    const yPos = Math.floor((mousePos.y / pixelToMatrixRatio));
+    const brushDiameter = (brushSize * 2) + 1;
+    const startingCell = {x: xPos - brushSize, y: yPos - brushSize};
+    for (let i = 0; i < brushDiameter; i++) {
+        for (let j = 0; j < brushDiameter; j++) {
+            const currentCell = {x: startingCell.x + j, y: startingCell.y + i}
+            const distanceFromCenter = Math.sqrt((Math.abs(currentCell.x - xPos)** 2) + (Math.abs(currentCell.y - yPos) ** 2));
+            if (distanceFromCenter <= brushSize && (matrix.getElementFromCoords(currentCell.x, currentCell.y) instanceof Elements.Void || element === Elements.Void)) {
+                matrix.setElementAtCoordsByVector(new element(currentCell.x, currentCell.y), [0, 0]);
+            }
+        }
+    }
 }
 
-for (const renderableElement of Elements.renderableElements) {
-    const tempEl = new renderableElement(0, 0);
-    $('#element-canvas').append(`<div class="element-select" style="background-color: ${tempEl.color}" id="${tempEl.name}">${tempEl.name}</div>`);
-    $(`#${tempEl.name}`).click(function (){
-        paintElement = renderableElement;
+for (const renderedElement of Elements.renderedElements) {
+    const tempEl = new renderedElement(0, 0);
+    $('#element-canvas').append(`<div class="element-select"  id="${tempEl.name}">${tempEl.name}</div>`);
+    $(`#${tempEl.name}`)
+        .click(function (){
+        paintElement = renderedElement;
     })
+        .css({
+            'background-color': `${tempEl.color}`,
+            'width': '50px',
+            'height': '50px',
+            'margin': '2px',
+            'display': 'inline-block'
+        });
 }
 
 $('body').prepend(canvas).css("background-color", "black");
@@ -76,12 +94,12 @@ $('canvas').css("border", "white solid 1px")
     .mousedown(function (e){
     if (e.button === 0){
         mouseHeld = setInterval(function () {
-            setCellFromMousePos(mousePosition, paintElement);
+            paintCellsToSelectedElement(mousePosition, paintElement);
         }, 10);
     }
     if (e.button === 2){
         mouseHeld = setInterval(function () {
-            setCellFromMousePos(mousePosition, Elements.Void);
+            paintCellsToSelectedElement(mousePosition, Elements.Void);
         }, 10);
     }
 })
