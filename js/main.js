@@ -1,7 +1,7 @@
 "use strict";
 
 import * as Matrix from "./matrix.js";
-import * as Element from "./elements.js";
+import * as Elements from "./elements.js";
 
 const pixelToMatrixRatio = 4;
 const canvasWidth = 1000;
@@ -16,13 +16,15 @@ let tickCount = 0;
 let togglePause = false;
 let toggleFaucet = false;
 let mouseHeld = undefined;
-let mousePosition;
+let mousePosition = null;
+let paintElement = null;
+
 
 function tick() {
     if (toggleFaucet) {
-        matrix.array2d[0][5] = new Element.Water(5, 0);
-        matrix.array2d[0][7] = new Element.Water(7, 0);
-        matrix.array2d[0][9] = new Element.Water(9, 0);
+        matrix.array2d[0][5] = new Elements.Water(5, 0);
+        matrix.array2d[0][7] = new Elements.Water(7, 0);
+        matrix.array2d[0][9] = new Elements.Water(9, 0);
     }
     matrix.updateElementPositions(matrix.setNewCoordsForAllElements());
     context.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -54,6 +56,14 @@ function setCellFromMousePos(mousePos, element) {
     matrix.setElementAtCoordsByVector(new element(xPos, yPos), [0, 0]);
 }
 
+for (const renderableElement of Elements.renderableElements) {
+    const tempEl = new renderableElement(0, 0);
+    $('#element-canvas').append(`<div class="element-select" style="background-color: ${tempEl.color}" id="${tempEl.name}">${tempEl.name}</div>`);
+    $(`#${tempEl.name}`).click(function (){
+        paintElement = renderableElement;
+    })
+}
+
 $('body').prepend(canvas).css("background-color", "black");
 $('canvas').css("border", "white solid 1px")
     .attr({
@@ -66,12 +76,12 @@ $('canvas').css("border", "white solid 1px")
     .mousedown(function (e){
     if (e.button === 0){
         mouseHeld = setInterval(function () {
-            setCellFromMousePos(mousePosition, Element.Water);
+            setCellFromMousePos(mousePosition, paintElement);
         }, 10);
     }
     if (e.button === 2){
         mouseHeld = setInterval(function () {
-            setCellFromMousePos(mousePosition, Element.Void);
+            setCellFromMousePos(mousePosition, Elements.Void);
         }, 10);
     }
 })

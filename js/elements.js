@@ -1,10 +1,9 @@
 "use strict";
 
-export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone};
-
 const sandColor = "#e1c9a1";
 const waterColor = "#497dff";
 const stoneColor = "#505050";
+
 
 /*TODO:
  *All Elements should have an x and y value that updates anytime they move cells in the matrix
@@ -141,12 +140,14 @@ class Stone extends SolidImmovable {
 }
 
 class Sand extends SolidMovable {
+    // static color = sandColor;
     constructor(x, y) {
         super(x, y);
         this.name = "sand";
         this.color = sandColor;
         this.state = "solid";
     }
+
 }
 
 class Water extends Liquid{
@@ -157,3 +158,7 @@ class Water extends Liquid{
         this.state = "liquid";
     }
 }
+
+const renderableElements = [Sand, Water, Stone];
+
+export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone, renderableElements};
