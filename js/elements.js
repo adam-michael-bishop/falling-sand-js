@@ -159,6 +159,6 @@ class Water extends Liquid{
     }
 }
 
-const renderableElements = [Sand, Water, Stone];
+const renderedElements = [Sand, Water, Stone];
 
-export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone, renderableElements};
+export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone, renderedElements};
