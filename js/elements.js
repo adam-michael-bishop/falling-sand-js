@@ -4,11 +4,6 @@ const sandColor = "#e1c9a1";
 const waterColor = "#497dff";
 const stoneColor = "#505050";
 
-
-/*TODO:
- *All Elements should have an x and y value that updates anytime they move cells in the matrix
- *Create a shouldMove function that will use the current x and y values to determine if an element should move to a new cell
- */
 class Element {
     constructor(x, y) {
         this.x = x;
@@ -26,11 +21,18 @@ class Element {
             downRight: [1, 1]
         }
     }
+
+    /**
+     * @param array2d
+     * @param direction direction should be an array that describes the x and y vector of the element's direction.
+     *                  [1, 0] Would be to the right. [1, 1] Would be down and to the right diagonal.
+     * @returns {*[]}
+     */
     getCoordsToNewMovePosition({array2d}, direction) {
-        //direction should be an array that describes the x and y vector of the element's direction
-        //[1, 0] would be to the right. [1, 1] would be down and to the right diagonal
         let newPos = [this.x, this.y];
-        if (direction === false) {return newPos}
+        if (direction === false) {
+            return newPos
+        }
         for (let i = 0; i < this.velocity; i++) {
             if (!(array2d[this.y + direction[1]][this.x + direction[0]] instanceof Solid)) {
                 newPos[0] += direction[0];
@@ -38,6 +40,9 @@ class Element {
             }
         }
         return newPos;
+    }
+    shouldMove() {
+        return false
     }
 }
 
