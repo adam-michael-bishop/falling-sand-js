@@ -17,22 +17,17 @@ class Matrix {
             return matrix
         })();
     }
-    /*TODO:
-    * Refactor the generateNextStepMatrix to just call the step function for each element
-    * Maybe create a shouldStep method to determine if an element has room to move
-    * This would make the step method on the element simpler, as it would only need to call it if the element should move
-     */
     setNewCoordsForAllElements() {
         let arr2d = [];
         for (let i = 0; i < this.array2d.length; i++) {
             arr2d.push([]);
             for (let j = 0; j < this.array2d[i].length; j++) {
                 let element = this.getElementFromCoords(j, i);
-                if (element instanceof Element.Void || element instanceof Element.SolidImmovable) {
-                    arr2d[i].push('');
-                } else {
+                // if (element instanceof Element.Void || element instanceof Element.SolidImmovable) {
+                //     arr2d[i].push('');
+                // } else {
                     arr2d[i].push(element.getCoordsToNewMovePosition(this, element.shouldMove(this)));
-                }
+                // }
             }
         }
         return arr2d
@@ -43,7 +38,7 @@ class Matrix {
                 let element = this.getElementFromCoords(j, i);
                 let newCords = arr2d[i][j];
                 if (!(element instanceof Element.Void)) {
-                    if ((i !== newCords[1] || j !== newCords[0]) && newCords !== '') {
+                    if ((i !== newCords[1] || j !== newCords[0]) ) {
                         let vector = element.shouldMove(this);
                         this.swapElementPositions(element, newCords, vector);
                     }
@@ -52,23 +47,29 @@ class Matrix {
         }
     }
     swapElementPositions(element, newCoords, vector) {
-        if (!vector) {return;}
+        let currentVector = vector;
+        // Change the loop so that it will change the vector instead of stopping the loop when hitting a solid or liquid
         for (let i = 0; i < element.velocity; i++) {
-            let nextElement = this.getElementFromCoords(element.x, element.y, vector);
-            if (nextElement instanceof Element.Solid || nextElement === undefined) {
+            if (!currentVector) {
                 return
             }
+            let nextElement = this.getElementFromCoords(element.x, element.y, currentVector);
+            if (nextElement instanceof Element.SolidImmovable || nextElement === undefined) {
+                return
+            }
+            // else if (nextElement instanceof Element.SolidImmovable || nextElement instanceof Element.Liquid) {
+            //     currentVector = element.shouldMove(this);
+            //     if (!currentVector) {
+            //         continue
+            //     }
+            // }
             nextElement.x = element.x;
             nextElement.y = element.y;
-            this.setElementAtCoordsByVector(element, vector);
+            this.setElementAtCoordsByVector(element, currentVector);
             this.array2d[nextElement.y][nextElement.x] = nextElement;
-            i++;
         }
     }
     getElementFromCoords(x, y, vector = [0, 0]) {
-        // if (vector[0] !== 0 && vector[1] !== 0) {
-        //     console.log(x, y, vector);
-        // }
         let xCoords = x + vector[0];
         let yCoords = y + vector[1];
         if (xCoords >= this.width || xCoords < 0 || yCoords >= this.height || yCoords < 0) {
