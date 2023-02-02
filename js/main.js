@@ -5,7 +5,7 @@ import * as Elements from "./elements.js";
 
 const pixelToMatrixRatio = 4;
 const canvasWidth = 1000;
-const canvasHeight = 800;
+const canvasHeight = 600;
 const canvasId = 'game-window';
 const canvas = document.createElement('canvas');
 const context = canvas.getContext("2d");
@@ -93,11 +93,13 @@ $('canvas').css("border", "white solid 1px")
         "<button id='toggle-faucet'>faucet</button>")
     .mousedown(function (e){
     if (e.button === 0){
+        clearInterval(mouseHeld);
         mouseHeld = setInterval(function () {
             paintCellsToSelectedElement(mousePosition, paintElement);
         }, 10);
     }
     if (e.button === 2){
+        clearInterval(mouseHeld);
         mouseHeld = setInterval(function () {
             paintCellsToSelectedElement(mousePosition, Elements.Void);
         }, 10);
@@ -132,16 +134,3 @@ $('#toggle-faucet').click(function () {
 })
 
 let gameTick = setInterval(tick, updateRateMS);
-
-
-// matrix.updateSteps(matrix.generateNextStepMatrix());
-// drawMatrixToContext();
-// matrix.array2d[0][10] = new Element.Sand(10, 0);
-
-// console.log(matrix.array2d[0][10].step(10,0,matrix.array2d));
-// console.log(matrix);
-// let test = matrix.getElementFromCoords(10, 0);
-// console.log(test.getCoordsToNewMovePosition(matrix, test.shouldMove(matrix)));
-
-// matrix.debugFillFirstRow(new Element.Sand());
-// console.log(matrix.generateNextStepMatrix());
