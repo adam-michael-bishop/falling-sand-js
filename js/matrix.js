@@ -1,6 +1,6 @@
 "use strict"
 import * as Element from "./elements.js";
-export {Matrix};
+import {Liquid, SolidMovable} from "./elements.js";
 
 class Matrix {
     constructor(width, height) {
@@ -18,33 +18,30 @@ class Matrix {
         })();
     }
     setNewCoordsForAllElements() {
-        let arr2d = [];
-        for (let i = 0; i < this.array2d.length; i++) {
-            arr2d.push([]);
-            for (let j = 0; j < this.array2d[i].length; j++) {
-                let element = this.getElementFromCoords(j, i);
-                // if (element instanceof Element.Void || element instanceof Element.SolidImmovable) {
-                //     arr2d[i].push('');
-                // } else {
-                    arr2d[i].push(element.getCoordsToNewMovePosition(this, element.shouldMove(this)));
-                // }
-            }
-        }
-        return arr2d
-    }
-    updateElementPositions(arr2d) {
         for (let i = 0; i < this.array2d.length; i++) {
             for (let j = 0; j < this.array2d[i].length; j++) {
-                let element = this.getElementFromCoords(j, i);
-                let newCords = arr2d[i][j];
-                if (!(element instanceof Element.Void)) {
-                    if ((i !== newCords[1] || j !== newCords[0]) ) {
-                        let vector = element.shouldMove(this);
-                        this.swapElementPositions(element, newCords, vector);
-                    }
+                const element = this.getElementFromCoords(j, i);
+                const newCoords = element.shouldMove(this);
+                if (newCoords) {
+                    element.setCoordsToNewMovePosition(this, newCoords);
                 }
             }
         }
+        return this;
+    }
+    updateElementPositions() {
+        for (let i = 0; i < this.array2d.length; i++) {
+            for (let j = 0; j < this.array2d[i].length; j++) {
+                let element = this.getElementFromCoords(j, i);
+                let newCoords = element.getMoveToPosition();
+                if (!(element instanceof Element.Void) && newCoords.length !== 0) {
+                    let vector = element.shouldMove(this);
+                    this.swapElementPositions(element, newCoords, vector);
+                }
+                element.setMoveToPosition([]);
+            }
+        }
+        return this;
     }
     swapElementPositions(element, newCoords, vector) {
         let currentVector = vector;
@@ -54,7 +51,11 @@ class Matrix {
                 return
             }
             let nextElement = this.getElementFromCoords(element.x, element.y, currentVector);
-            if (nextElement instanceof Element.SolidImmovable || nextElement === undefined) {
+            if (element instanceof SolidMovable && (nextElement instanceof Element.SolidImmovable || nextElement === undefined)) {
+                return
+            }
+            if (element instanceof Liquid && (nextElement instanceof Element.Solid || nextElement === undefined))
+            {
                 return
             }
             // else if (nextElement instanceof Element.SolidImmovable || nextElement instanceof Element.Liquid) {
@@ -83,3 +84,5 @@ class Matrix {
         this.array2d[element.y][element.x] = element;
     }
 }
+
+export {Matrix};
