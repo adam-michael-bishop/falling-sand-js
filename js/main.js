@@ -24,11 +24,11 @@ let brushSize = 2;
 
 function tick() {
     if (toggleFaucet) {
-        matrix.array2d[0][5] = new Elements.Water(5, 0);
-        matrix.array2d[0][7] = new Elements.Water(7, 0);
-        matrix.array2d[0][9] = new Elements.Water(9, 0);
+        matrix.array2d[0][5] = new paintElement(5, 0);
+        matrix.array2d[0][7] = new paintElement(7, 0);
+        matrix.array2d[0][9] = new paintElement(9, 0);
     }
-    matrix.updateElementPositions(matrix.setNewCoordsForAllElements());
+    matrix.setNewCoordsForAllElements().updateElementPositions();
     context.clearRect(0, 0, canvasWidth, canvasHeight);
     drawMatrixToContext();
     tickCount++
