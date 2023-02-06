@@ -10,6 +10,7 @@ class Element {
         this.y = y;
         this.velocity = 5;
         this.isMoving = false;
+        this.moveTo = [];
         this.vector2d = {
             up: [0, -1],
             down: [0, 1],
@@ -26,12 +27,12 @@ class Element {
      * @param array2d
      * @param direction direction should be an array that describes the x and y vector of the element's direction.
      *                  [1, 0] Would be to the right. [1, 1] Would be down and to the right diagonal.
-     * @returns {*[]}
+     * @returns {Element}
      */
-    getCoordsToNewMovePosition({array2d}, direction) {
+    setCoordsToNewMovePosition({array2d}, direction) {
         let newPos = [this.x, this.y];
         if (direction === false) {
-            return newPos
+            this.moveTo = newPos;
         }
         for (let i = 0; i < this.velocity; i++) {
             if (!(array2d[this.y + direction[1]][this.x + direction[0]] instanceof Solid)) {
@@ -39,10 +40,17 @@ class Element {
                 newPos[1] += direction[1];
             }
         }
-        return newPos;
+        this.moveTo = newPos;
+        return this;
     }
     shouldMove() {
         return false
+    }
+    setMoveToPosition(coords) {
+        this.moveTo = coords;
+    }
+    getMoveToPosition() {
+        return this.moveTo;
     }
 }
 
