@@ -12,8 +12,9 @@ const context = canvas.getContext("2d");
 const frameRate = 60;
 const updateRateMS = 1000 / frameRate;
 const matrix = new Matrix.Matrix(canvasWidth / pixelToMatrixRatio, canvasHeight / pixelToMatrixRatio);
+let gameTick = null;
 let tickCount = 0;
-let togglePause = false;
+let togglePause = true;
 let toggleFaucet = false;
 let mouseHeld = undefined;
 let mousePosition = null;
@@ -134,4 +135,6 @@ $('#toggle-faucet').click(function () {
 $("#debug-tick").click(() => tick());
 
 renderElementCanvas();
-// let gameTick = setInterval(tick, updateRateMS);
+if(!togglePause) {
+    gameTick = setInterval(tick, updateRateMS);
+}
