@@ -66,20 +66,22 @@ function paintCellsToSelectedElement(mousePos, element) {
     }
 }
 
-for (const renderedElement of Elements.renderedElements) {
-    const tempEl = new renderedElement(0, 0);
-    $('#element-canvas').append(`<div class="element-select"  id="${tempEl.name}">${tempEl.name}</div>`);
-    $(`#${tempEl.name}`)
-        .click(function (){
-        paintElement = renderedElement;
-    })
-        .css({
-            'background-color': `${tempEl.color}`,
-            'width': '50px',
-            'height': '50px',
-            'margin': '2px',
-            'display': 'inline-block'
-        });
+function renderElementCanvas() {
+    for (const renderedElement of Elements.renderedElements) {
+        const tempEl = new renderedElement(0, 0);
+        $('#element-canvas').append(`<div class="element-select"  id="${tempEl.name}">${tempEl.name}</div>`);
+        $(`#${tempEl.name}`)
+            .click(function () {
+                paintElement = renderedElement;
+            })
+            .css({
+                'background-color': `${tempEl.color}`,
+                'width': '50px',
+                'height': '50px',
+                'margin': '2px',
+                'display': 'inline-block'
+            });
+    }
 }
 
 $('body').prepend(canvas).css("background-color", "black");
@@ -89,8 +91,6 @@ $('canvas').css("border", "white solid 1px")
         height: `${canvasHeight}`,
         id: canvasId,
     })
-    .after("<button id='pause-sim'>pause</button>" +
-        "<button id='toggle-faucet'>faucet</button>")
     .mousedown(function (e){
     if (e.button === 0){
         clearInterval(mouseHeld);
@@ -128,9 +128,10 @@ $('#pause-sim').click(function (){
         togglePause = false;
     }
 });
-
 $('#toggle-faucet').click(function () {
     toggleFaucet = !toggleFaucet;
-})
+});
+$("#debug-tick").click(() => tick());
 
-let gameTick = setInterval(tick, updateRateMS);
+renderElementCanvas();
+// let gameTick = setInterval(tick, updateRateMS);
