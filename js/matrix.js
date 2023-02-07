@@ -33,17 +33,17 @@ class Matrix {
         for (let i = 0; i < this.array2d.length; i++) {
             for (let j = 0; j < this.array2d[i].length; j++) {
                 let element = this.getElementFromCoords(j, i);
-                let newCoords = element.getMoveToPosition();
-                if (!(element instanceof Element.Void) && newCoords.length !== 0) {
+                // let newCoords = element.getMoveToPosition();
+                if (!(element instanceof Element.Void)) {
                     let vector = element.shouldMove(this);
-                    this.swapElementPositions(element, newCoords, vector);
+                    this.swapElementPositions(element, vector);
                 }
                 element.setMoveToPosition([]);
             }
         }
         return this;
     }
-    swapElementPositions(element, newCoords, vector) {
+    swapElementPositions(element, vector) {
         let currentVector = vector;
         // Change the loop so that it will change the vector instead of stopping the loop when hitting a solid or liquid
         for (let i = 0; i < element.velocity; i++) {
