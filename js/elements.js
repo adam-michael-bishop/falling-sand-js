@@ -13,6 +13,16 @@ function arraysAreIdentical(arr1, arr2){
     }
     return true;
 }
+function fallLeftOrRightRandom() {
+    if (Math.random() >= .5) {
+        this.setCurrentDirection(this.direction.downLeft);
+        return this;
+    } else {
+        this.setCurrentDirection(this.direction.downRight);
+        return this;
+    }
+}
+
 /** TODO:
  * need to refactor shouldMove to return a bool only and make another method to determine which vector an Element should move
  *
@@ -22,12 +32,11 @@ class Element {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.velocity = 5;
-        this.currentVector = [];
-        this.isFalling = false;
-        this.isMovingHorizontally = false;
-        this.moveTo = [];
-        this.vector2d = {
+        this.velocity = 10;
+        this.currentDirection = [0, 0];
+        this.moveTo = [0, 0];
+        this.shouldMove = false;
+        this.direction = {
             up: [0, -1],
             down: [0, 1],
             left: [-1, 0],
@@ -39,7 +48,14 @@ class Element {
             none: [0, 0]
         }
     }
-
+    get coords() {
+        return [this.x, this.y];
+    }
+    set coords(coords) {
+        const [x, y] = coords;
+        this.x = x;
+        this.y = y;
+    }
     /**
      * @param array2d
      * @param direction direction should be an array that describes the x and y vector of the element's direction.
@@ -60,8 +76,9 @@ class Element {
         this.moveTo = newPos;
         return this;
     }
-    shouldMove() {
-        return false
+    changeDirection(matrix) {
+        this.setCurrentDirection(this.direction.none);
+        return this;
     }
     setMoveToPosition(coords) {
         this.moveTo = coords;
@@ -70,12 +87,9 @@ class Element {
     getMoveToPosition() {
         return this.moveTo;
     }
-    setCurrentVector(vector) {
-        this.currentVector = vector;
+    setCurrentDirection(direction) {
+        this.currentDirection = direction;
         return this;
-    }
-    getCurrentVector() {
-        return this.currentVector;
     }
 }
 
@@ -84,6 +98,7 @@ class Void extends Element {
         super(x, y);
         this.name = "void";
         this.color = "transparent";
+        this.shouldMove = false;
     }
 }
 
@@ -92,80 +107,69 @@ class Solid extends Element {
 }
 
 class Liquid extends Element {
-    shouldMove(matrix) {
-        const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.vector2d.down);
-        const cellRight = matrix.getElementFromCoords(this.x, this.y, this.vector2d.right);
-        const cellLeft = matrix.getElementFromCoords(this.x, this.y, this.vector2d.left);
-        const cellBottomRight = matrix.getElementFromCoords(this.x, this.y, this.vector2d.downRight);
-        const cellBottomLeft = matrix.getElementFromCoords(this.x, this.y, this.vector2d.downLeft);
+    constructor(x, y) {
+        super(x, y);
+        this.shouldMove = true;
+        this.currentHorizontalDirection = (() => {
+            if (Math.random() >= .5) {
+                return this.direction.left;
+            } else {
+                return this.direction.right;
+            }
+        })();
+    }
+    changeDirection(matrix) {
+        const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.direction.down);
+        const cellRight = matrix.getElementFromCoords(this.x, this.y, this.direction.right);
+        const cellLeft = matrix.getElementFromCoords(this.x, this.y, this.direction.left);
+        const cellBottomRight = matrix.getElementFromCoords(this.x, this.y, this.direction.downRight);
+        const cellBottomLeft = matrix.getElementFromCoords(this.x, this.y, this.direction.downLeft);
 
-        if (!(cellBelow instanceof Solid) && !(cellBelow instanceof Liquid) && cellBelow !== undefined) {
-            this.isFalling = true;
-            this.setCurrentVector(this.vector2d.down);
-            return this.vector2d.down;
+        if (cellBelow instanceof Void || cellBelow instanceof Gas) {
+            this.setCurrentDirection(this.direction.down);
+            return this;
         }
-        if (!(cellBottomLeft instanceof Solid || cellBottomLeft instanceof Liquid || cellBottomLeft === undefined) &&
-            !(cellBottomRight instanceof Solid || cellBottomRight instanceof Liquid || cellBottomRight === undefined)) {
-            if (Math.random() >= .5) {
-                this.isFalling = true;
-                this.setCurrentVector(this.vector2d.downLeft);
-                return this.vector2d.downLeft;
-            } else {
-                this.isFalling = true;
-                this.setCurrentVector(this.vector2d.downRight);
-                return this.vector2d.downRight;
+        if ((cellBottomLeft instanceof Void || cellBottomLeft instanceof Gas) && (cellBottomRight instanceof Void || cellBottomRight instanceof Gas) ) {
+            return fallLeftOrRightRandom.call(this);
+        }
+        if (cellBottomLeft instanceof Void || cellBottomLeft instanceof Gas) {
+            this.setCurrentDirection(this.direction.downLeft);
+            return this;
+        }
+        if (cellBottomRight instanceof Void || cellBottomRight instanceof Gas) {
+            this.setCurrentDirection(this.direction.downRight);
+            return this;
+        }
+        if ((cellLeft instanceof Void || cellLeft instanceof Gas) && (cellRight instanceof Void || cellRight instanceof Gas)) {
+            if (arraysAreIdentical(this.currentHorizontalDirection, this.direction.left)) {
+                this.setCurrentDirection(this.direction.left);
+                return this;
+            }
+            if (arraysAreIdentical(this.currentHorizontalDirection, this.direction.right)) {
+                this.setCurrentDirection(this.direction.right);
+                return this;
             }
         }
-        if (!(cellBottomLeft instanceof Solid || cellBottomLeft instanceof Liquid || cellBottomLeft === undefined)) {
-            this.isFalling = true;
-            this.setCurrentVector(this.vector2d.downLeft);
-            return this.vector2d.downLeft;
+        if (cellLeft instanceof Void || cellLeft instanceof Gas) {
+            this.setCurrentDirection(this.direction.left);
+            this.currentHorizontalDirection = this.direction.left;
+            return this;
         }
-        if (!(cellBottomRight instanceof Solid || cellBottomRight instanceof Liquid || cellBottomRight === undefined)) {
-            this.isFalling = true;
-            this.setCurrentVector(this.vector2d.downRight);
-            return this.vector2d.downRight;
+        if (cellRight instanceof Void || cellRight instanceof Gas) {
+            this.setCurrentDirection(this.direction.right);
+            this.currentHorizontalDirection = this.direction.right;
+            return this;
         }
-        if ((cellLeft instanceof Void || cellLeft instanceof Gas) &&
-            (cellRight instanceof Void || cellRight instanceof Gas) &&
-            !(arraysAreIdentical(this.currentVector, this.vector2d.left) || arraysAreIdentical(this.currentVector, this.vector2d.right))) {
-            if (Math.random() >= .5) {
-                this.isFalling = false;
-                this.isMovingHorizontally = true;
-                this.setCurrentVector(this.vector2d.left);
-                return this.vector2d.left;
-            } else {
-                this.isFalling = false;
-                this.isMovingHorizontally = true;
-                this.setCurrentVector(this.vector2d.right);
-                return this.vector2d.right;
-            }
-        }
-        if ((cellLeft instanceof Void || cellLeft instanceof Gas) && arraysAreIdentical(this.currentVector, this.vector2d.left)) {
-            this.isFalling = false;
-            this.isMovingHorizontally = true;
-            this.setCurrentVector(this.vector2d.left);
-            return this.vector2d.left;
-        }
-        if ((cellRight instanceof Void || cellRight instanceof Gas) && arraysAreIdentical(this.currentVector, this.vector2d.right)) {
-            this.isFalling = false;
-            this.isMovingHorizontally = true;
-            this.setCurrentVector(this.vector2d.right);
-            return this.vector2d.right;
-        }
-        if ((cellRight instanceof Void || cellRight instanceof Gas) || (cellLeft instanceof Void || cellLeft instanceof Gas)) {
-            this.isFalling = false;
-            this.isMovingHorizontally = true;
-            if (arraysAreIdentical(this.currentVector, this.vector2d.right)) {
-                this.setCurrentVector(this.vector2d.left);
-                return this.vector2d.left;
-            }
-            this.setCurrentVector(this.vector2d.right);
-            return this.vector2d.right;
-        }
-        this.isFalling = false;
-        this.setCurrentVector(this.vector2d.none);
-        return false;
+        // if ((cellRight instanceof Void || cellRight instanceof Gas) || (cellLeft instanceof Void || cellLeft instanceof Gas)) {
+        //     if (arraysAreIdentical(this.currentDirection, this.direction.right)) {
+        //         this.setCurrentDirection(this.direction.left);
+        //         return this;
+        //     }
+        //     this.setCurrentDirection(this.direction.right);
+        //     return this;
+        // }
+        this.setCurrentDirection(this.direction.none);
+        return this;
     }
 }
 
@@ -174,60 +178,49 @@ class Gas extends Element {
 }
 
 class SolidMovable extends Solid {
-    shouldMove(matrix) {
-        const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.vector2d.down);
-        const cellBottomRight = matrix.getElementFromCoords(this.x, this.y, this.vector2d.downRight);
-        const cellBottomLeft = matrix.getElementFromCoords(this.x, this.y, this.vector2d.downLeft);
+    constructor(x, y) {
+        super(x, y);
+        this.shouldMove = true;
+    }
+    changeDirection(matrix) {
+        const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.direction.down);
+        const cellBottomRight = matrix.getElementFromCoords(this.x, this.y, this.direction.downRight);
+        const cellBottomLeft = matrix.getElementFromCoords(this.x, this.y, this.direction.downLeft);
 
         if (this.y >= matrix.height - 1) {
-            this.isFalling = false;
-            this.setCurrentVector(this.vector2d.none);
-            return false;
+            this.setCurrentDirection(this.direction.none);
+            return this;
         }
         if (!(cellBelow instanceof Solid) && cellBelow !== undefined) {
-            this.isFalling = true;
-            this.setCurrentVector(this.vector2d.down);
-            return this.vector2d.down;
+            this.setCurrentDirection(this.direction.down);
+            return this;
         }
         if (!(cellBottomLeft instanceof Solid || cellBottomLeft === undefined) && !(cellBottomRight instanceof Solid || cellBottomRight === undefined)) {
-            if (Math.random() >= .5) {
-                this.isFalling = true;
-                this.setCurrentVector(this.vector2d.downLeft);
-                return this.vector2d.downLeft;
-            } else {
-                this.isFalling = true;
-                this.setCurrentVector(this.vector2d.downRight);
-                return this.vector2d.downRight;
-            }
+            return fallLeftOrRightRandom.call(this);
         }
         if (!(cellBottomLeft instanceof Solid || cellBottomLeft === undefined)) {
-            this.isFalling = true;
-            this.setCurrentVector(this.vector2d.downLeft);
-            return this.vector2d.downLeft;
+            this.setCurrentDirection(this.direction.downLeft);
+            return this;
         }
         if (!(cellBottomRight instanceof Solid || cellBottomRight === undefined)) {
-            this.isFalling = true;
-            this.setCurrentVector(this.vector2d.downRight);
-            return this.vector2d.downRight;
+            this.setCurrentDirection(this.direction.downRight);
+            return this;
         }
-
-        this.isFalling = false;
-        this.setCurrentVector(this.vector2d.none);
-        return false;
+        this.setCurrentDirection(this.direction.none);
+        return this;
     }
 }
 
 class SolidImmovable extends Solid {
+
+}
+
+class Stone extends SolidImmovable {
     constructor(x, y) {
         super(x, y);
         this.name = "stone";
         this.color = stoneColor;
-        this.state = "solid";
     }
-}
-
-class Stone extends SolidImmovable {
-
 }
 
 class Sand extends SolidMovable {
@@ -236,7 +229,6 @@ class Sand extends SolidMovable {
         super(x, y);
         this.name = "sand";
         this.color = sandColor;
-        this.state = "solid";
     }
 
 }
@@ -246,10 +238,9 @@ class Water extends Liquid{
         super(x, y);
         this.name = "water";
         this.color = waterColor;
-        this.state = "liquid";
     }
 }
 
 const renderedElements = [Sand, Water, Stone];
 
-export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone, renderedElements};
+export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone, renderedElements, arraysAreIdentical};
