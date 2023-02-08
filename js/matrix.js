@@ -1,6 +1,6 @@
 "use strict"
 import * as Element from "./elements.js";
-import {Liquid, SolidMovable} from "./elements.js";
+import {arraysAreIdentical, Liquid, SolidMovable} from "./elements.js";
 
 class Matrix {
     constructor(width, height) {
@@ -17,13 +17,12 @@ class Matrix {
             return matrix
         })();
     }
-    setNewCoordsForAllElements() {
+    changeDirectionForAllElements() {
         for (let i = 0; i < this.array2d.length; i++) {
             for (let j = 0; j < this.array2d[i].length; j++) {
                 const element = this.getElementFromCoords(j, i);
-                const newCoords = element.shouldMove(this);
-                if (newCoords) {
-                    element.setCoordsToNewMovePosition(this, newCoords);
+                if (element.shouldMove) {
+                    element.changeDirection(this);
                 }
             }
         }
@@ -34,23 +33,22 @@ class Matrix {
             for (let j = 0; j < this.array2d[i].length; j++) {
                 let element = this.getElementFromCoords(j, i);
                 // let newCoords = element.getMoveToPosition();
-                if (!(element instanceof Element.Void)) {
-                    let vector = element.shouldMove(this);
-                    this.swapElementPositions(element, vector);
+                if (element.shouldMove) {
+                    this.swapElementPositions(element, element.currentDirection);
+                    element.setCurrentDirection(element.direction.none);
                 }
-                element.setMoveToPosition([]);
             }
         }
         return this;
     }
-    swapElementPositions(element, vector) {
-        let currentVector = vector;
-        // Change the loop so that it will change the vector instead of stopping the loop when hitting a solid or liquid
+    swapElementPositions(element, direction) {
+        // let currentVector = direction;
+        if (arraysAreIdentical(direction, element.direction.none)) {
+            return
+        }
+        // Change the loop so that it will change the direction instead of stopping the loop when hitting a solid or liquid
         for (let i = 0; i < element.velocity; i++) {
-            if (!currentVector) {
-                return
-            }
-            let nextElement = this.getElementFromCoords(element.x, element.y, currentVector);
+            let nextElement = this.getElementFromCoords(element.x, element.y, direction);
             if (element instanceof SolidMovable && (nextElement instanceof Element.SolidImmovable || nextElement === undefined)) {
                 return
             }
@@ -66,7 +64,7 @@ class Matrix {
             // }
             nextElement.x = element.x;
             nextElement.y = element.y;
-            this.setElementAtCoordsByVector(element, currentVector);
+            this.setElementAtCoordsByVector(element, direction);
             this.array2d[nextElement.y][nextElement.x] = nextElement;
         }
     }
