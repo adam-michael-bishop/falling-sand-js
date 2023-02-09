@@ -3,6 +3,10 @@
 const sandColor = "#e1c9a1";
 const waterColor = "#497dff";
 const stoneColor = "#505050";
+const woodColor = "#5e360b";
+const smokeColor = "rgba(231,231,231,0.4)";
+const charcoalColor = "#2a2a2a";
+const fireColor = "rgba(255,60,0,0.6)";
 
 function arraysAreIdentical(arr1, arr2){
     if (arr1.length !== arr2.length) return false;
@@ -32,10 +36,14 @@ class Element {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.velocity = 10;
+        this.velocity = 7;
         this.currentDirection = [0, 0];
         this.moveTo = [0, 0];
         this.shouldMove = false;
+        this.flamability = 0;
+        this.chanceToExtinguish = 0;
+        this.isBurning = false;
+        this.shouldBeDestroyed = false;
         this.direction = {
             up: [0, -1],
             down: [0, 1],
@@ -55,6 +63,9 @@ class Element {
         const [x, y] = coords;
         this.x = x;
         this.y = y;
+    }
+    update(matrix) {
+
     }
     /**
      * @param array2d
@@ -90,6 +101,14 @@ class Element {
     setCurrentDirection(direction) {
         this.currentDirection = direction;
         return this;
+    }
+    getAdjacentElements(matrix) {
+        const adjacentElements = [];
+        for (const direction in this.direction) {
+            if (arraysAreIdentical(this.direction[direction], this.direction.none)) continue;
+            adjacentElements.push(matrix.getElementFromCoords(this.x, this.y, this.direction[direction]));
+        }
+        return adjacentElements;
     }
 }
 
@@ -241,6 +260,87 @@ class Water extends Liquid{
     }
 }
 
-const renderedElements = [Sand, Water, Stone];
+class Wood extends SolidImmovable {
+    constructor(x, y) {
+        super(x, y);
+        this.name = "wood";
+        this.color = woodColor;
+        this.flamability = 0.05;
+        this.chanceToExtinguish = 0.1;
+        this.burnTime = 500;
+    }
+    update(matrix) {
+        super.update();
+        this.combust(matrix);
+    }
+    combust(matrix) {
+        if (!this.isBurning) {
+            return;
+        }
+        if (this.chanceToExtinguish > Math.random()) {
+            this.isBurning = false;
+            this.color = charcoalColor;
+        }
+        if (this.isBurning) {
+            this.color = fireColor;
+            for (const adjacentElement of this.getAdjacentElements(matrix)) {
+                if (adjacentElement === undefined) continue;
+                if (adjacentElement instanceof Void) {
+                    this.isBurning = true;
+                }
+                this.ignite(adjacentElement);
+            }
+        }
+        if (this.burnTime <= 0) {
+            this.shouldBeDestroyed = true;
+        }
+        this.burnTime--;
+    }
+    ignite(element) {
+        if (element.flamability > Math.random()) {
+            element.isBurning = true;
+        }
+    }
+}
+
+class Charcoal extends SolidMovable {
+    constructor(x, y) {
+        super(x, y);
+        this.name = "coal";
+        this.color = charcoalColor;
+    }
+}
+
+class Fire extends Element {
+    constructor(x, y) {
+        super(x, y);
+        this.name = "fire";
+        this.color = fireColor;
+        this.chanceToDie = 0.5;
+    }
+    update(matrix) {
+        super.update(matrix);
+        for (const adjacentElement of this.getAdjacentElements(matrix)) {
+            if (adjacentElement === undefined) continue;
+            this.ignite(adjacentElement);
+        }
+        this.shouldBeDestroyed = this.chanceToDie > Math.random();
+    }
+    ignite(element) {
+        if (element.flamability > Math.random()) {
+            element.isBurning = true;
+        }
+    }
+}
+
+class Smoke extends Gas {
+    constructor(x, y) {
+        super(x, y);
+        this.name = "smoke";
+        this.color = smokeColor;
+    }
+}
+
+const renderedElements = [Sand, Water, Stone, Wood, Fire];
 
 export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone, renderedElements, arraysAreIdentical};
