@@ -29,7 +29,7 @@ function tick() {
         matrix.array2d[0][9] = new paintElement(9, 0);
     }
     matrix.changeDirectionForAllElements()
-    matrix.updateElementPositions();
+    matrix.updateAllElements();
     context.clearRect(0, 0, canvasWidth, canvasHeight);
     drawMatrixToContext();
     tickCount++
