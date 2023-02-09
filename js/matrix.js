@@ -28,12 +28,14 @@ class Matrix {
         }
         return this;
     }
-    updateElementPositions() {
+    updateAllElements() {
         for (let i = 0; i < this.array2d.length; i++) {
             for (let j = 0; j < this.array2d[i].length; j++) {
                 let element = this.getElementFromCoords(j, i);
-                // let newCoords = element.getMoveToPosition();
-                if (element.shouldMove) {
+                element.update(this);
+                if (element.shouldBeDestroyed) {
+                    this.setElementAtCoordsByVector(new Element.Void(j, i));
+                } else if (element.shouldMove) {
                     this.swapElementPositions(element, element.currentDirection);
                     element.setCurrentDirection(element.direction.none);
                 }
@@ -76,7 +78,7 @@ class Matrix {
         }
         return this.array2d[yCoords][xCoords];
     }
-    setElementAtCoordsByVector(element, vector) {
+    setElementAtCoordsByVector(element, vector = [0, 0]) {
         element.x += vector[0];
         element.y += vector[1];
         this.array2d[element.y][element.x] = element;
