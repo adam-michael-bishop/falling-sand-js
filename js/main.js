@@ -14,12 +14,12 @@ const updateRateMS = 1000 / frameRate;
 const matrix = new Matrix.Matrix(canvasWidth / pixelToMatrixRatio, canvasHeight / pixelToMatrixRatio);
 let gameTick = null;
 let tickCount = 0;
-let togglePause = true;
+let togglePause = false;
 let toggleFaucet = false;
 let mouseHeld = undefined;
 let mousePosition = null;
 let paintElement = Elements.Sand;
-let brushSize = 2;
+let brushSize = 5;
 
 
 function tick() {
@@ -49,7 +49,7 @@ function getMousePos(canvas, evt) {
     return {
         x: evt.clientX - rect.left,
         y: evt.clientY - rect.top
-    };
+    }
 }
 
 function paintCellsToSelectedElement(mousePos, element) {
