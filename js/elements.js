@@ -265,9 +265,9 @@ class Wood extends SolidImmovable {
         super(x, y);
         this.name = "wood";
         this.color = woodColor;
-        this.flamability = 0.05;
-        this.chanceToExtinguish = 0.1;
-        this.burnTime = 500;
+        this.flamability = 0.1;
+        this.chanceToExtinguish = 0.05;
+        this.burnTime = 200;
     }
     update(matrix) {
         super.update();
@@ -281,13 +281,13 @@ class Wood extends SolidImmovable {
             this.isBurning = false;
             this.color = charcoalColor;
         }
+        for (const adjacentElement of this.getAdjacentElements(matrix)) {
+            this.isBurning = adjacentElement instanceof Void;
+        }
         if (this.isBurning) {
             this.color = fireColor;
             for (const adjacentElement of this.getAdjacentElements(matrix)) {
                 if (adjacentElement === undefined) continue;
-                if (adjacentElement instanceof Void) {
-                    this.isBurning = true;
-                }
                 this.ignite(adjacentElement);
             }
         }
