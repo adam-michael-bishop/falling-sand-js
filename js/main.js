@@ -19,7 +19,7 @@ let toggleFaucet = false;
 let mouseHeld = undefined;
 let mousePosition = null;
 let paintElement = Elements.Sand;
-let brushSize = 5;
+let brushSize = 10;
 
 
 function tick() {
@@ -28,8 +28,8 @@ function tick() {
         matrix.array2d[0][7] = new paintElement(7, 0);
         matrix.array2d[0][9] = new paintElement(9, 0);
     }
-    matrix.changeDirectionForAllElements()
     matrix.updateAllElements();
+    matrix.moveAllElements();
     context.clearRect(0, 0, canvasWidth, canvasHeight);
     drawMatrixToContext();
     tickCount++
@@ -59,10 +59,13 @@ function paintCellsToSelectedElement(mousePos, element) {
     const startingCell = {x: xPos - brushSize, y: yPos - brushSize};
     for (let i = 0; i < brushDiameter; i++) {
         for (let j = 0; j < brushDiameter; j++) {
-            const currentCell = {x: startingCell.x + j, y: startingCell.y + i}
+            const currentCell = {
+                x: startingCell.x + j,
+                y: startingCell.y + i
+            }
             const distanceFromCenter = Math.sqrt((Math.abs(currentCell.x - xPos)** 2) + (Math.abs(currentCell.y - yPos) ** 2));
-            if (distanceFromCenter <= brushSize && (matrix.getElementFromCoords(currentCell.x, currentCell.y) instanceof Elements.Void || element === Elements.Void)) {
-                matrix.setElementAtCoordsByVector(new element(currentCell.x, currentCell.y), [0, 0]);
+            if (distanceFromCenter < brushSize && (matrix.getElementFromCoords(currentCell.x, currentCell.y) instanceof Elements.Void || element === Elements.Void)) {
+                matrix.setElementAtCoords(new element(currentCell.x, currentCell.y), [0, 0]);
             }
         }
     }
