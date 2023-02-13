@@ -119,6 +119,9 @@ class Void extends Element {
         this.color = "transparent";
         this.shouldMove = false;
     }
+    get replaceWith() {
+        return Smoke;
+    }
 }
 
 class Solid extends Element {
@@ -136,6 +139,10 @@ class Liquid extends Element {
                 return this.direction.right;
             }
         })();
+    }
+    update(matrix) {
+        super.update(matrix);
+        this.changeDirection(matrix);
     }
     changeDirection(matrix) {
         const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.direction.down);
@@ -179,27 +186,88 @@ class Liquid extends Element {
             this.currentHorizontalDirection = this.direction.right;
             return this;
         }
-        // if ((cellRight instanceof Void || cellRight instanceof Gas) || (cellLeft instanceof Void || cellLeft instanceof Gas)) {
-        //     if (arraysAreIdentical(this.currentDirection, this.direction.right)) {
-        //         this.setCurrentDirection(this.direction.left);
-        //         return this;
-        //     }
-        //     this.setCurrentDirection(this.direction.right);
-        //     return this;
-        // }
         this.setCurrentDirection(this.direction.none);
         return this;
     }
 }
 
 class Gas extends Element {
+    constructor(x, y) {
+        super(x, y);
+        this.shouldMove = true;
+        this.currentHorizontalDirection = (() => {
+            if (Math.random() >= .5) {
+                return this.direction.left;
+            } else {
+                return this.direction.right;
+            }
+        })();
+    }
+    update(matrix) {
+        super.update(matrix);
+        this.changeDirection(matrix);
+    }
+    changeDirection(matrix) {
+        const cellAbove = matrix.getElementFromCoords(this.x, this.y, this.direction.up);
+        const cellRight = matrix.getElementFromCoords(this.x, this.y, this.direction.right);
+        const cellLeft = matrix.getElementFromCoords(this.x, this.y, this.direction.left);
+        const cellTopRight = matrix.getElementFromCoords(this.x, this.y, this.direction.upRight);
+        const cellTopLeft = matrix.getElementFromCoords(this.x, this.y, this.direction.upLeft);
 
+        if (cellAbove instanceof Void) {
+            this.setCurrentDirection(this.direction.up);
+            return this;
+        }
+        if (cellTopLeft instanceof Void && cellTopRight instanceof Void) {
+            if (Math.random() >= .5) {
+                this.setCurrentDirection(this.direction.upLeft);
+                return this;
+            } else {
+                this.setCurrentDirection(this.direction.upRight);
+                return this;
+            }
+        }
+        if (cellTopLeft instanceof Void) {
+            this.setCurrentDirection(this.direction.downLeft);
+            return this;
+        }
+        if (cellTopRight instanceof Void) {
+            this.setCurrentDirection(this.direction.downRight);
+            return this;
+        }
+        if (cellLeft instanceof Void && cellRight instanceof Void) {
+            if (arraysAreIdentical(this.currentHorizontalDirection, this.direction.left)) {
+                this.setCurrentDirection(this.direction.left);
+                return this;
+            }
+            if (arraysAreIdentical(this.currentHorizontalDirection, this.direction.right)) {
+                this.setCurrentDirection(this.direction.right);
+                return this;
+            }
+        }
+        if (cellLeft instanceof Void) {
+            this.setCurrentDirection(this.direction.left);
+            this.currentHorizontalDirection = this.direction.left;
+            return this;
+        }
+        if (cellRight instanceof Void) {
+            this.setCurrentDirection(this.direction.right);
+            this.currentHorizontalDirection = this.direction.right;
+            return this;
+        }
+        this.setCurrentDirection(this.direction.none);
+        return this;
+    }
 }
 
 class SolidMovable extends Solid {
     constructor(x, y) {
         super(x, y);
         this.shouldMove = true;
+    }
+    update(matrix) {
+        super.update(matrix);
+        this.changeDirection(matrix);
     }
     changeDirection(matrix) {
         const cellBelow = matrix.getElementFromCoords(this.x, this.y, this.direction.down);
@@ -265,9 +333,17 @@ class Wood extends SolidImmovable {
         super(x, y);
         this.name = "wood";
         this.color = woodColor;
-        this.flamability = 0.1;
+        this.flamability = 0.5;
         this.chanceToExtinguish = 0.05;
         this.burnTime = 200;
+        this.chanceToCreateCharcoal = 0.6;
+    }
+    get replaceWith() {
+       if (this.chanceToCreateCharcoal > Math.random()) {
+           return Charcoal;
+       } else {
+           return Smoke;
+       }
     }
     update(matrix) {
         super.update();
@@ -282,12 +358,15 @@ class Wood extends SolidImmovable {
             this.color = charcoalColor;
         }
         for (const adjacentElement of this.getAdjacentElements(matrix)) {
-            this.isBurning = adjacentElement instanceof Void;
+            this.isBurning = adjacentElement instanceof Void || adjacentElement instanceof Fire || adjacentElement instanceof Smoke;
         }
         if (this.isBurning) {
             this.color = fireColor;
             for (const adjacentElement of this.getAdjacentElements(matrix)) {
                 if (adjacentElement === undefined) continue;
+                if (adjacentElement instanceof Void && Math.random() > 0.05) {
+                    adjacentElement.shouldBeDestroyed = true;
+                }
                 this.ignite(adjacentElement);
             }
         }
@@ -317,6 +396,8 @@ class Fire extends Element {
         this.name = "fire";
         this.color = fireColor;
         this.chanceToDie = 0.5;
+        this.timeToLive = 10;
+        this.replaceWith = Void;
     }
     update(matrix) {
         super.update(matrix);
@@ -324,7 +405,10 @@ class Fire extends Element {
             if (adjacentElement === undefined) continue;
             this.ignite(adjacentElement);
         }
-        this.shouldBeDestroyed = this.chanceToDie > Math.random();
+        if (this.timeToLive <= 0) {
+            this.shouldBeDestroyed = this.chanceToDie > Math.random();
+        }
+        this.timeToLive--;
     }
     ignite(element) {
         if (element.flamability > Math.random()) {
@@ -336,11 +420,14 @@ class Fire extends Element {
 class Smoke extends Gas {
     constructor(x, y) {
         super(x, y);
+        this.velocity = 3;
         this.name = "smoke";
         this.color = smokeColor;
+        this.timeToLive = 100;
+        this.chanceToDie = 0.5;
     }
 }
 
-const renderedElements = [Sand, Water, Stone, Wood, Fire];
+const renderedElements = [Sand, Water, Stone, Wood, Fire, Smoke];
 
 export {Element, Sand, Water, Void, Gas, Solid, Liquid, SolidMovable, SolidImmovable, Stone, renderedElements, arraysAreIdentical};
